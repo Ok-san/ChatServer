@@ -80,6 +80,10 @@ int main() {
 				userData->name = "UNNAMED";
 				userData->user_id = last_user_id++;
 
+				for (auto entry : userNames) {
+					ws->send(online(entry.first), uWS::OpCode::TEXT);
+				}
+
 				updateName(userData);
 				ws->publish(BROADCAST_CHANNEL, online(userData->user_id));
 
@@ -90,10 +94,6 @@ int main() {
 
 				ws->subscribe(user_channel); //personal channel
 				ws->subscribe(BROADCAST_CHANNEL); //common channel
-
-				for (auto entry : userNames) {
-					ws->send(online(entry.first), uWS::OpCode::TEXT);
-				}
 			},
 			.message = [&last_user_id](auto* ws, string_view message, uWS::OpCode opCode) {
 				string strMessage = string(message);
@@ -125,7 +125,7 @@ int main() {
 					else ws->send("Error, name too long", uWS::OpCode::TEXT);
 				}
 			},
-			.close = [] (auto* ws, int /*code*/, string_view /*message*/) {
+			.close = [](auto* ws, int сode, string_view message) {
 				PerSocketData* userData = (PerSocketData*)ws->getUserData();
 				ws->publish(BROADCAST_CHANNEL, offline(userData->user_id));
 				deleteName(userData);
